@@ -1,6 +1,6 @@
-_MatHem is Sweden’s leading independent online grocery shop, with a distribution network reaching over 50% of Swedish households and a strong brand built over the past ten years.
+_MatHem is Sweden's leading independent online grocery shop, with a distribution network reaching over 50% of Swedish households and a strong brand built over the past ten years._
 
-This post is covering an experiment we've built as is (so far) not a service we provide_
+---
 
 Using your fingers to type on a keyboard or phone when searching for things to buy is the assumed most efficient way to shop online. Along came voice assistants a few years ago as a good alternative to the screen.
 
@@ -22,9 +22,9 @@ Wiring the bump sensor is easily done. It has three pins - one for ground, one f
 #### Fundamental decisions
 Firstly I had to decide where to do the inference - on the edge or in the cloud. There are solutions for this that can run on the Pi, but that would tie this feature to the hardware. What if I want to move it to a less performant hardware or integrate it in our mobile apps?
 
-The only benefit I could see for running it on the Raspberry Pi would be that it'd probably be faster since it would be fewer roundtrips to the cloud.
+The only benefit I could see for running it on the Raspberry Pi would be that it'd probably be faster since it would be fewer round trips to the cloud.
 
-With extensibility in mind I decided to make the edge device dumb and literally just capture the image and upload to the cloud.
+With extensibility in mind I decided to make the edge device dumb and literally just capture the image and upload to the cloud and handle the AI there.
 
 #### Authentication
 At Mathem we use Cognito User Pools for authentication. Since the UI for this this device is just a bump sensor we need to perform a headless login. I perform this the same way as you do [headless authentication](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md) to your WiFi network, but with a custom file in the boot partition, `mh-credentials.json`:
@@ -34,7 +34,7 @@ At Mathem we use Cognito User Pools for authentication. Since the UI for this th
     "password": "mypassword"
 }
 ```
-_make sure to change the default password and that it's not publicly accessible over the internet_
+_make sure to change your Pi's default password and make sure that it's not publicly accessible over the internet_
 
 In `/home/pi/camera` we place a python script, camera.py:
 
@@ -59,7 +59,7 @@ user.authenticate(password=credentials['password'])
 ```
 This reads the credentials file and uses [pycognito](https://pypi.org/project/pycognito/) to authenticate the username and password.
 
-Next, we initialise the camera and the bump sensor
+Next, we initialize the camera and the bump sensor
 ```
 camera = PiCamera()
 camera.rotation = 180  # The camera is fitted on the device upside down, so we need to rotate it
@@ -104,9 +104,11 @@ sudo python3 /home/pi/camera/camera.py
 ```
 
 ## Backend architecture
-Already having a 100% serverless artchitecture made it simple to hook this workflow into the mix.
+Already having a 100% serverless architecture made it simple to hook this workflow into the mix.
 
-The prerequisite for uploading an image in a secure manner is to obtain a presigned URL that allows this. Having already authenticated the device, we can now call an API Gateway endpoint that authorizes the user before invoking the following code. For nodejs we use Jeremy Daly's [lambda-api](https://github.com/jeremydaly/lambda-api).
+![Arch diagram](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/arch-diagram.png?v=1) 
+
+The prerequisite for uploading an image in a secure manner is to obtain a pre-signed URL that allows this. Having already authenticated the device, we can now call an API Gateway endpoint that authorizes the user before invoking the following code. For nodejs we use Jeremy Daly's [lambda-api](https://github.com/jeremydaly/lambda-api).
 
 ```
 async function get(req, res) {
@@ -151,51 +153,53 @@ UploadTrigger:
 
 #### Choosing AI service
 
-AWS offers two AI services that can recognize hand writing; [Rekognition](https://aws.amazon.com/rekognition/) and [Textract](https://aws.amazon.com/textract/). At first I wasn't aware that Textract had this capabliity, but it turns out it was [announced](https://aws.amazon.com/blogs/machine-learning/amazon-textract-recognizes-handwriting-and-adds-five-new-languages/) only about a month ago since the time of writing.
+AWS offers two AI services that can recognize hand writing; [Rekognition](https://aws.amazon.com/rekognition/) and [Textract](https://aws.amazon.com/textract/). At first I wasn't aware that Textract had this capabliity, but it turns out it was [announced](https://aws.amazon.com/blogs/machine-learning/amazon-textract-recognizes-handwriting-and-adds-five-new-languages/) only about a month prior to the time of writing.
 
-Using the Rekognition API worked ok, but it wasn't great once the hand writing turned scribbly. Also, as you'll see later on, the camera is fitted a bit too close to the paper, so no matter how I turn the lens, it will always be out of focus.
+Using the Rekognition API worked ok, but it wasn't great once the hand writing turned scribbly. Also, as you'll see later on, the camera is fitted a bit too close to the paper, so no matter how I adjust the lens, it will always be out of focus on that distance.
 
-Once I realised Textract had similar capabilities I did some side-by-side comparison and realised that using Textract takes this project a step further from a fun proof-of-concept into an actually useful device.
+Once I realized Textract had similar capabilities I did some side-by-side comparison and saw that using Textract takes this project a step away from being a fun proof-of-concept and closer to an actually useful device.
 
 Here follows an example of using the same blurry image in Rekogintion vs. Textract. Since MatHem is currently only offered in Swedish, so are the items on the list:
 
 <table>
   <tr>
-    <td>Rekognition</td>
+    <td colspan=2>Rekognition</td>
    </tr> 
    <tr>
       <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/rekognition.png"></td>
-      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/rekognition-zoom.png"></td>
+      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/rekognition-zoom.png?v=1"></td>
   </tr>
    <tr>
-      <td cellspan=2>Pricing</td>
+      <td colspan=2>Pricing</td>
   </tr>
    <tr>
-      <td cellspan=2><a href="https://aws.amazon.com/rekognition/pricing/" target="_blank">$0.001 per image after free tier</a></td>
+      <td colspan=2><a href="https://aws.amazon.com/rekognition/pricing/" target="_blank">$0.001 per image after free tier</a></td>
   </tr>
 </table>
 <table>
   <tr>
-    <td>Textract</td>
+    <td colspan=2>Textract</td>
    </tr> 
-   <tr>wallmounted.jpg
-      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/textract.png"></td> 
    <tr>
-      <td>Pricing</td>
+      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/textract.png"></td> 
+      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/textract-zoom.png?v=1"></td> 
+   <tr>
+      <td colspan=2>Pricing</td>
   </tr>
    <tr>
-      <td><a href="https://aws.amazon.com/textract/pricing/" target="_blank">$0.0015 per document (image) after free tier</a></td>
+      <td colspan=2><a href="https://aws.amazon.com/textract/pricing/" target="_blank">$0.0015 per document (image) after free tier</a></td>
   </tr>
 </table>
-Here we can see that textract nailed all four words while Rekognition really struggled. Now, our product search engine allows for typos, so the end result still often made sense with Rekogintion's results, but Textract was still superior.
+Here we can see that Textract nailed all four words while Rekognition really struggled. Now, our product search engine allows for typos, so the end result still often made sense with Rekogintion's results, but Textract was still superior.
 
-Also - Rekognition just gives a list of words and their coordinates in the image while Textract categorises the matches into blocks, so for example "bar of soap" would be one search term using Textract, but three separate ones using Textract.
+Also - Rekognition just gives a list of words and their coordinates in the image while Textract categorizes the matches into blocks, so for example "bar of soap" would be one search term using Textract, but three separate ones using Textract.
 
-Pricing is similar and although Textract is charged a bit higher, for our volumes it's neglectable, but 
+Pricing is similar and although Textract is charged a bit higher, for our volumes it's neglectable.
 
 With all that in account and the fact that Textract is the better service name, the choice was simple.
 
 #### upload-trigger.js
+When an image is uploaded, we trigger the following Lambda function:
 ```
 exports.handler = async function (event) {
   const s3Record = event.Records[0].s3;
@@ -219,15 +223,15 @@ exports.handler = async function (event) {
 };
 ```
 
-When calling the Textract API you can choose if you wnat top do it synchronously or in a asyncrhonous fire-and-forget manner. The latter means that you pass it an SNS topic ARN to which it sends a notification when the job is done.
+When calling the Textract API you can choose if you want to do it synchronously or in a asynchronous fire-and-forget manner. The latter means that you pass it an SNS topic ARN to which it sends a notification when the job is done. 
 
-Here I went for the syncronous call since these images are small and processed fairly quickly (~2s) and I feel it favours the end-to-end duration.
+Here I went for the synchronous call since these images are small and processed fairly quickly (~2s) and I feel it favours the end-to-end duration.
 
-That's it for the code. The detected text is passed to internal APIs and the front end is updated using websockets, but that's out of scope for this article.
+That's it for the code. The detected text is passed to internal APIs and the front end is updated using web sockets, but that's out of scope for this article.
 
 ## Designing the case
-The inital proof of concept wasn't presented in a very usability inviting way, so I had to wrap all the wiring up in a sturdy case:
-{% youtube EdNP2iZ4MCw %}
+The initial proof of concept wasn't presented in a very usability inviting way, so I had to wrap all the wiring up in a sturdy case:
+{% youtube elFLHO7BnVk %}
 
 The end result is this wall mounted beauty:
 ![wall mounted device](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/wallmounted.jpg)
@@ -235,23 +239,27 @@ The end result is this wall mounted beauty:
 I'm a noob when it comes to 3D modelling, but it's really easy to get started with Tinkercad.com. 
 
 The case consists of three items;
-* A case with screw holes for attaching the Raspberry Pi and bump sensor
-* An arm holding the camera. The arm is hollow to allow us to hide the flexicable. This arm would benefit from being longer to get less blurry images, but I was constrained to the 10cm length of the stock flexicable
-* A wall mount that the inner construction slides into
+* A case with screw holes for attaching the Raspberry Pi and bump sensor.
+* An arm holding the camera. The arm is hollow to allow us to hide the flex cable. This arm would benefit from being longer to get less blurry images, but I was constrained to the 10cm length of the stock cable.
+* A wall mount that the inner construction slides into.
 
 #### Inner case and arm
-[!Case and arm](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/case-and-arm.png)
+![Case and arm](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/case-and-arm.png)
 
 Printed and all wired up it looks like this:
-[!Case inside](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/case-inside.png)
+![Case inside](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/case-inside.jpg)
 
 These took ~12 hours to print
 
 #### Outer casing / wall mount
-[!Wall mount model](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/wallmount.png)
+![Wall mount model](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/wallmount.png)
+
+This took an additional 8-9 hours to print. 
 
 The inner casing slides perfectly into the mount and the back of the mount secures the loose cables in place.
 
 #### End result
-Here I have mounted it on the wall in the kitchen next to my Echo Show on which I've browsed and logged in to to mathem.se using Firefox the sake of this demo. I also coated the device with a blue paper to add some friction to when I push the shopping list in.
+Here I have mounted it on the wall in the kitchen next to my Echo Show on which I've used Firefox to browse and log in to [mathem.se](mathem.se) for the sake of this demo. I also coated the device with a blue paper to add some friction to when I push the shopping list in.
 {% youtube 7P1CiuTNRKU %}
+
+Please get in touch if you have ideas for improvement or other applications for this use case.
