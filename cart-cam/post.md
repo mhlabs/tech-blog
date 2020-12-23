@@ -1,10 +1,12 @@
-# Building a hand written shopping list interpretor for MatHem.se
+_MatHem is Sweden’s leading independent online grocery shop, with a distribution network reaching over 50% of Swedish households and a strong brand built over the past ten years.
+
+This post is covering an experiment we've built as is (so far) not a service we provide_
 
 Using your fingers to type on a keyboard or phone when searching for things to buy is the assumed most efficient way to shop online. Along came voice assistants a few years ago as a good alternative to the screen.
 
-I think there's a good point in minimising pulling the phone up form the pocket and in my family we have a habit of using old fashioned hand written shopping lists that, when it's time to place the order, we type into the search bar at [Mathem](mathem.se). This means we're writing it twice - once with a pen and once with a keyboard which is way too inefficient.
+I think there's a good point in minimizing pulling the phone up from our pockets and in my family we have a habit of using old fashioned hand written shopping lists that, when it's time to place the order, we type into the search bar at [Mathem](mathem.se). This means we're writing it twice - once with a pen and once with a keyboard which is way too inefficient.
 
-To tackle this problem I decided to bridge the gap between the physical list and the online cart by building a scanning device that uses hand writing recognition along with existing Mathem APIs. I wanted to have this done as a weekend project, and knowing that the 3D modelling and printing would be the most time consuming parts, I decided to time cap the development time to 4 hours.
+To tackle this problem I decided to bridge the gap between the physical list and the online cart by building a scanning device that uses hand writing recognition along with existing Mathem APIs. I wanted to have this done as a weekend project, and knowing that the 3D modelling and printing would be the most time consuming parts, I decided to time cap the development time to a minimum and write as little code as possible.
 
 ## Hardware
 I decided to use components I had lying around at home;
@@ -159,20 +161,30 @@ Here follows an example of using the same blurry image in Rekogintion vs. Textra
 
 <table>
   <tr>
-    <td>Textract</td>
     <td>Rekognition</td>
    </tr> 
    <tr>
-      <td><img src="./textract.png"></td> 
-      <td><img src="./rekognition.png"></td>
+      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/rekognition.png"></td>
+      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/rekognition-zoom.png"></td>
   </tr>
    <tr>
-      <td>Pricing</td>
+      <td cellspan=2>Pricing</td>
+  </tr>
+   <tr>
+      <td cellspan=2><a href="https://aws.amazon.com/rekognition/pricing/" target="_blank">$0.001 per image after free tier</a></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td>Textract</td>
+   </tr> 
+   <tr>wallmounted.jpg
+      <td><img src="https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/textract.png"></td> 
+   <tr>
       <td>Pricing</td>
   </tr>
    <tr>
       <td><a href="https://aws.amazon.com/textract/pricing/" target="_blank">$0.0015 per document (image) after free tier</a></td>
-      <td><a href="https://aws.amazon.com/rekognition/pricing/" target="_blank">$0.001 per image after free tier</a></td>
   </tr>
 </table>
 Here we can see that textract nailed all four words while Rekognition really struggled. Now, our product search engine allows for typos, so the end result still often made sense with Rekogintion's results, but Textract was still superior.
@@ -218,7 +230,7 @@ The inital proof of concept wasn't presented in a very usability inviting way, s
 {% youtube EdNP2iZ4MCw %}
 
 The end result is this wall mounted beauty:
-![wall mounted device](./wallmounted.jpg)
+![wall mounted device](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/wallmounted.jpg)
 
 I'm a noob when it comes to 3D modelling, but it's really easy to get started with Tinkercad.com. 
 
@@ -228,15 +240,15 @@ The case consists of three items;
 * A wall mount that the inner construction slides into
 
 #### Inner case and arm
-[!Case and arm](./case-and-arm.png)
+[!Case and arm](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/case-and-arm.png)
 
 Printed and all wired up it looks like this:
-[!Case inside](./case-inside.png)
+[!Case inside](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/case-inside.png)
 
 These took ~12 hours to print
 
 #### Outer casing / wall mount
-[!Wall mount model](./wallmount.png)
+[!Wall mount model](https://raw.githubusercontent.com/mhlabs/tech-blog/master/cart-cam/wallmount.png)
 
 The inner casing slides perfectly into the mount and the back of the mount secures the loose cables in place.
 
